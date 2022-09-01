@@ -5,6 +5,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
+from NewsExtraction import cnn_extract as cnn
 
 
 # lemmatizes/stems a single document given as a list of words
@@ -75,8 +76,6 @@ class Corpus:
         self.vects = []
         self.docs = texts
         self.preprocess()
-        self.vectorize()
-        self.similarity_matrix = self.simmat()
 
     def printall(self):
         for i in self.docs:
@@ -85,38 +84,18 @@ class Corpus:
     def preprocess(self):
         stopword = stopwords.words('english')
         # will get rid of punctuation in document as well
-        stopword.extend([',', '.', '``', "''", '--', '?', "n't", "'s", ':', '$', "'ve", "'d"])
+        stopword.extend([',', '.', '``', "''", '--', '?', "n't", "'s", ':', '$', "'ve", "'d", "'", "-", '"', "'"])
         for cnt in range(len(self.docs)):
             self.docs[cnt] = self.docs[cnt].lower()
             self.docs[cnt] = nltk.word_tokenize(self.docs[cnt])
             self.docs[cnt] = [word for word in self.docs[cnt] if word not in stopword]
             self.docs[cnt] = code_lemmatize(self.docs[cnt])
 
-    def vectorize(self):
-        # creates 1-d array to later add to
-        self.vects = list(np.zeros(len(self.docs)))
-        # creates list of unique vocabulary words in a corpus
-        # so that we can find the number of words to compare
-        wordlist = []
-        for i in self.docs:
-            wordlist.extend(tfdictionary(i).keys())
-        wordlist = set(wordlist)
-        for cnt in range(len(self.docs)):
-            # converts vects into 2d array, where each row is a vector
-            self.vects[cnt] = [0] * len(wordlist)
-        for i, doc in enumerate(self.docs):
-            for j, word in enumerate(tfdictionary(doc).keys()):
-                self.vects[i][j] = tfidf(self.docs, doc, word)
-        # completes vectorization, where each row is a vector corresponding to a document
-        # containing tf-idf for a specific term in that document. each column represents one term
 
-    # returns cosine similarity matrix of all documents in corpus
-    def simmat(self):
-        mat = [[0 for x in range(len(self.docs))] for y in range(len(self.docs))]
-        for row in range(len(self.docs)):
-            for column in range(len(self.docs)):
-                # this is s//et to round purely for the purpose of displaying a readable matrix
-                mat[row][column] = round(cossim(self.vects[row], self.vects[column]), 2)
-        return mat
-
-g = Corpus(["good", "bad"])
+links = ["https://www.cnn.com/2022/08/31/tennis/serena-williams-anett-kontaveit-us-open-spt-intl/index.html"]
+articles = []
+for i in links:
+    articles.append(cnn(i))
+test = Corpus(articles)
+for i in test.docs:
+    print(i)
