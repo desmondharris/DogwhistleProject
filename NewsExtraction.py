@@ -1,25 +1,18 @@
 from bs4 import BeautifulSoup
 import requests
+import urllib.request
 
 
 def cnn_extract(link):
-    found = False
-    while not found:
-        page = requests.get(link)
-        if page is not None:
-            found = True
-    soup = BeautifulSoup(page.text, "html.parser")
-    # This was added because I ran into an error where seemingly randomly, I would get back a different soup object, and
-    # parsing it with the code in the try block would return None.
-    try:
-        body_text = soup.find('p', class_="zn-body__paragraph speakable").getText()
-        body_html = soup.find_all('p', class_="zn-body__paragraph" )
-    except AttributeError:
-        body_html = soup.select('.article__content p')
-        body_text = ""
-    for i in body_html:
-        body_text += i.getText()
-    return body_text
+    page = urllib.request.urlopen(link)
+    soup = BeautifulSoup(page, "html.parser")
+    all_paragraphs = soup.select(".zn-body__paragraph")
+    text = ""
+    for i in all_paragraphs:
+        text += i.getText() + " "
+    if text is None:
+        raise Exception('Error parsing HTML')
+    return text
 
 
 def fox_extract(link):
