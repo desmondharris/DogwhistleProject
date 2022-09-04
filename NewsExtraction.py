@@ -1,65 +1,77 @@
 from bs4 import BeautifulSoup
-import requests
+import urllib.request
 
 
 def cnn_extract(link):
-    found = False
-    while not found:
-        page = requests.get(link)
-        if page is not None:
-            found = True
-    soup = BeautifulSoup(page.text, "html.parser")
-    # This was added because I ran into an error where seemingly randomly, I would get back a different soup object, and
-    # parsing it with the code in the try block would return None.
-    try:
-        body_text = soup.find('p', class_="zn-body__paragraph speakable").getText()
-        body_html = soup.find_all('p', class_="zn-body__paragraph" )
-    except AttributeError:
-        body_html = soup.select('.article__content p')
-        body_text = ""
-    for i in body_html:
-        body_text += i.getText()
-    return body_text
+    """
+    Convert CNN link to string containing article content with BeautifulSoup 4
+
+    :param link: Link to CNN article
+    :type link: str
+    :return: Body content of article
+    :rtype: str
+    """
+    page = urllib.request.urlopen(link)
+    soup = BeautifulSoup(page, "html.parser")
+    all_paragraphs = soup.select("div.zn-body__paragraph")
+    text = ""
+    for i in all_paragraphs:
+        text += i.getText() + "  \n"
+    if text is None:
+        raise Exception('Error parsing HTML')
+    return text
 
 
 def fox_extract(link):
-    found = False
-    while not found:
-        page = requests.get(link)
-        if page is not None:
-            found = True
-    soup = BeautifulSoup(page.text, "html.parser")
+    """
+       Convert FOX News link to string containing article content with BeautifulSoup 4
+
+       :param link: Link to FOX article
+       :type link: str
+       :return: Body content of article
+       :rtype: str
+       """
+    page = urllib.request.urlopen(link)
+    soup = BeautifulSoup(page, "html.parser")
     paragraphs = soup.select('.article-body p')
     body_text = ""
     for i in paragraphs:
-        body_text += "\n" + i.getText()
+        body_text += i.getText() + "\n"
     return body_text
 
 
 def cnbc_extract(link):
-    found = False
-    while not found:
-        page = requests.get(link)
-        if page is not None:
-            found = True
-    soup = BeautifulSoup(page.text, "html.parser")
+    """
+       Convert CNBC link to string containing article content with BeautifulSoup 4
+
+       :param link: Link to CNBC article
+       :type link: str
+       :return: Body content of article
+       :rtype: str
+       """
+    page = urllib.request.urlopen(link)
+    soup = BeautifulSoup(page, "html.parser")
     body_html = soup.select('.group p')
     body_text = ""
     for i in body_html:
-        body_text += "\n"+i.getText()
+        body_text += i.getText() + "\n"
     return body_text
 
 
 def nbc_extract(link):
-    found = False
-    while not found:
-        page = requests.get(link)
-        if page is not None:
-            found = True
-    soup = BeautifulSoup(page.text, "html.parser")
+    """
+       Convert NBC new link to string containing article content with BeautifulSoup 4
+
+       :param link: Link to NBC article
+       :type link: str
+       :return: Body content of article
+       :rtype: str
+       """
+    page = urllib.request.urlopen(link)
+    soup = BeautifulSoup(page, "html.parser")
     body_html = soup.select('.article-body__content p')
     body_text = ""
     for i in body_html:
-        body_text += "\n" + i.getText()
+        body_text += i.getText() + "\n"
     return body_text
 
