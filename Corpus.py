@@ -5,8 +5,15 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 
 
-# lemmatizes/stems a single document given as a list of words
 def code_lemmatize(words):
+    """
+    Lemmatize, then stem a tokenized document using NLTK's WordNetLemmatizer and PorterStemmer.
+
+    :param words: Document as a list of words
+    :type words: list
+    :return: List of lemmatized and stemmed words
+    :rtype: list
+    """
     lemmatizer = WordNetLemmatizer()
     stemmer = PorterStemmer()
     for cnter, k in enumerate(words):
@@ -16,10 +23,15 @@ def code_lemmatize(words):
     return words
 
 
-# takes a preprocessed corpus as a list of documents NOT as object Corpus
-# returns a dictionary where the keys are each word in the corpus, and the values are a list containing which documents
-# use the term
 def idf_dictionary(corpus):
+    """
+    Create inverse document frequency(IDF) dictionary for a corpus using IDF = ln( N / (DF + 1)) + 1
+
+    :param corpus: List of tokenized documents
+    :type corpus: list
+    :return: Dictionary with each individual word in the corpus, with the IDF value of it attached
+    :rtype: dict
+    """
     dicti = {}
     for cnt, doc in enumerate(corpus):
         for word in doc:
@@ -33,9 +45,15 @@ def idf_dictionary(corpus):
     return condensed_dict
 
 
-# takes a preproccesed document
-# returns a dictionary where the keys are each word in the given doc, and the values are the indices where the term is
 def tf_dictionary(doc):
+    """
+    Create a term frequency(TF) dictionary for a document in a corpus
+
+    :param doc: Tokenized document
+    :type doc: list
+    :return: Dictionary of each word in the document as keys, and each word's TF value as values
+    :rtype: dict
+    """
     dicti = {}
     for word in doc:
         try:
@@ -51,8 +69,18 @@ def tf_dictionary(doc):
 
 
 # generalized cosine similarity function for comparing two vectorized tf-df documents
-def cossim(veca, vecb):
-    return np.dot(veca, vecb) / (np.linalg.norm(veca) * np.linalg.norm(vecb))
+def cossim(vec_a, vec_b):
+    """
+    Calculate cosine similarity value for two given vectors
+
+    :param vec_a: First vector
+    :type vec_a: list
+    :param vec_b: Second vector
+    :type vec_b: list
+    :return: Cosine similarity value for the two vectors
+    :rtype: float
+    """
+    return np.dot(vec_a, vec_b) / (np.linalg.norm(vec_a) * np.linalg.norm(vec_b))
 
 
 class Corpus:
@@ -72,6 +100,12 @@ class Corpus:
             print(i)
 
     def preprocess(self):
+        """
+        Tokenize, convert to lowercase, lemmatize, stem, and remove stop words from a Corpus object.
+
+        :return: None
+        :rtype: None
+        """
         stopword = stopwords.words('english')
         # will get rid of punctuation in document as well
         stopword.extend([',', '.', '``', "''", '--', '?', "n't", "'s", ':', '$', "'ve", "'d", "'", "-", '"', "'", '’',
@@ -83,18 +117,33 @@ class Corpus:
             self.docs[cnt] = code_lemmatize(self.docs[cnt])
 
     def create_token_list(self):
+        """
+        Create list containing each unique vocab word in the Corpus once.
+
+        :return: None
+        """
         for i in self.docs:
             for word in i:
                 if word not in self.token_list:
                     self.token_list.append(word)
 
     def create_similarity_matrix(self):
+        """
+        Create similarity matrix for Corpus object.
+
+        :return: None
+        """
         self.similarity_matrix = np.zeros((len(self.docs), len(self.docs)))
         for row in range(self.similarity_matrix.shape[0]):
             for column in range(self.similarity_matrix.shape[1]):
                 self.similarity_matrix[row, column] = cossim(self.vectors[row], self.vectors[column])
 
     def vectorize(self):
+        """
+        Vectorize a Corpus object's documents with TF-IDF values.
+
+        :return: None
+        """
         idf_dict = idf_dictionary(self.docs)
         self.vectors = np.zeros((len(self.docs), len(self.token_list)))
         for document_index, document in zip(range(len(self.vectors)), self.docs):

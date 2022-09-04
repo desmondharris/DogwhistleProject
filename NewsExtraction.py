@@ -3,6 +3,14 @@ import urllib.request
 
 
 def cnn_extract(link):
+    """
+    Convert CNN link to string containing article content with BeautifulSoup 4
+
+    :param link: Link to CNN article
+    :type link: str
+    :return: Body content of article
+    :rtype: str
+    """
     page = urllib.request.urlopen(link)
     soup = BeautifulSoup(page, "html.parser")
     all_paragraphs = soup.select("div.zn-body__paragraph")
@@ -15,6 +23,14 @@ def cnn_extract(link):
 
 
 def fox_extract(link):
+    """
+       Convert FOX News link to string containing article content with BeautifulSoup 4
+
+       :param link: Link to FOX article
+       :type link: str
+       :return: Body content of article
+       :rtype: str
+       """
     page = urllib.request.urlopen(link)
     soup = BeautifulSoup(page, "html.parser")
     paragraphs = soup.select('.article-body p')
@@ -25,6 +41,14 @@ def fox_extract(link):
 
 
 def cnbc_extract(link):
+    """
+       Convert CNBC link to string containing article content with BeautifulSoup 4
+
+       :param link: Link to CNBC article
+       :type link: str
+       :return: Body content of article
+       :rtype: str
+       """
     page = urllib.request.urlopen(link)
     soup = BeautifulSoup(page, "html.parser")
     body_html = soup.select('.group p')
@@ -35,6 +59,14 @@ def cnbc_extract(link):
 
 
 def nbc_extract(link):
+    """
+       Convert NBC new link to string containing article content with BeautifulSoup 4
+
+       :param link: Link to NBC article
+       :type link: str
+       :return: Body content of article
+       :rtype: str
+       """
     page = urllib.request.urlopen(link)
     soup = BeautifulSoup(page, "html.parser")
     body_html = soup.select('.article-body__content p')
