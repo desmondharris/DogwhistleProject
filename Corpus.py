@@ -1,11 +1,8 @@
-from bs4 import BeautifulSoup
-import requests
 import numpy as np
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
-from NewsExtraction import cnn_extract as cnn
 
 
 # lemmatizes/stems a single document given as a list of words
@@ -32,7 +29,7 @@ def idf_dictionary(corpus):
                 dicti[word] = {cnt}
     condensed_dict = {}
     for key in dicti:
-        condensed_dict[key] = np.log(len(corpus)/len(dicti[key]))
+        condensed_dict[key] = np.log(len(corpus)/(len(dicti[key]) + 1)) + 1
     return condensed_dict
 
 
@@ -45,6 +42,11 @@ def tf_dictionary(doc):
             dicti[word] += 1
         except KeyError:
             dicti[word] = 1
+    n = 0
+    for i in dicti.values():
+        n += i
+    for i in dicti:
+        dicti[i] = dicti[i] / n
     return dicti
 
 
@@ -56,10 +58,14 @@ def cossim(veca, vecb):
 class Corpus:
     def __init__(self, texts):
         self.docs = []
-        self.vects = []
+        self.vectors = []
         self.token_list = []
+        self.similarity_matrix = []
         self.docs = texts
         self.preprocess()
+        self.create_token_list()
+        self.vectorize()
+        self.create_similarity_matrix()
 
     def printall(self):
         for i in self.docs:
@@ -69,9 +75,33 @@ class Corpus:
         stopword = stopwords.words('english')
         # will get rid of punctuation in document as well
         stopword.extend([',', '.', '``', "''", '--', '?', "n't", "'s", ':', '$', "'ve", "'d", "'", "-", '"', "'", '’',
-                         '—', '“', '(', ')'])
+                         '—', '“', '(', ')', "i'm"])
         for cnt in range(len(self.docs)):
             self.docs[cnt] = self.docs[cnt].lower()
             self.docs[cnt] = nltk.word_tokenize(self.docs[cnt])
             self.docs[cnt] = [word for word in self.docs[cnt] if word not in stopword]
             self.docs[cnt] = code_lemmatize(self.docs[cnt])
+
+    def create_token_list(self):
+        for i in self.docs:
+            for word in i:
+                if word not in self.token_list:
+                    self.token_list.append(word)
+
+    def create_similarity_matrix(self):
+        self.similarity_matrix = np.zeros((len(self.docs), len(self.docs)))
+        for row in range(self.similarity_matrix.shape[0]):
+            for column in range(self.similarity_matrix.shape[1]):
+                self.similarity_matrix[row, column] = cossim(self.vectors[row], self.vectors[column])
+
+    def vectorize(self):
+        idf_dict = idf_dictionary(self.docs)
+        self.vectors = np.zeros((len(self.docs), len(self.token_list)))
+        for document_index, document in zip(range(len(self.vectors)), self.docs):
+            tf_dict = tf_dictionary(document)
+            for term_index, term in zip(range(len(self.token_list)), self.token_list):
+                try:
+                    self.vectors[document_index, term_index] = tf_dict[term]*idf_dict[term]
+                except KeyError:
+                    self.vectors[document_index, term_index] = 0
+
