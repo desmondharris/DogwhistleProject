@@ -6,10 +6,10 @@ import urllib.request
 def cnn_extract(link):
     page = urllib.request.urlopen(link)
     soup = BeautifulSoup(page, "html.parser")
-    all_paragraphs = soup.select(".zn-body__paragraph")
+    all_paragraphs = soup.select("div.zn-body__paragraph")
     text = ""
     for i in all_paragraphs:
-        text += i.getText() + " "
+        text += i.getText() + "  \n"
     if text is None:
         raise Exception('Error parsing HTML')
     return text
