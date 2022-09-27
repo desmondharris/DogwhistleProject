@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import urllib.request
 
-
 def cnn_extract(link):
     """
     Convert CNN link to string containing article content with BeautifulSoup 4
@@ -74,4 +73,5 @@ def nbc_extract(link):
     for i in body_html:
         body_text += i.getText() + "\n"
     return body_text
+
 
