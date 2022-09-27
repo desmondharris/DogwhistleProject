@@ -6,7 +6,7 @@ from sklearn.manifold import TSNE
 # Several methods used came from Sebastian Theiler in Analytics Vidhya.
 # https://medium.com/analytics-vidhya/basics-of-using-pre-trained-glove-vectors-in-python-d38905f356db
 glove_dict = {}
-with open("Pretrained Vectors/glove.6B.300d.txt", 'r', encoding="utf-8") as file:
+with open("Pretrained Vectors/glove.6B.50d.txt", 'r', encoding="utf-8") as file:
     for i in file:
         line = i.split()
         key = line[0]
