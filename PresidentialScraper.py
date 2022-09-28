@@ -54,11 +54,8 @@ class PresidentialScraper:
         self.corpus = nltk.word_tokenize(self.corpus)
         stop = stopwords.words("english")
         self.corpus = [word for word in self.corpus if word not in stop]
-        temp = []
-        for i in self.corpus:
-            temp.append(list([i]))
+        temp = [self.corpus]
         self.corpus = temp
-
 
 
 def extract_speech(page):
@@ -88,25 +85,24 @@ if __name__ == '__main__':
             key = line[0]
             vector = np.array(line[1:], "float32")
             glove_dict[key] = vector
+
     keywords = ["urban", "thug", "drugs", "terror"]
     glove_vecs = r"Pretrained Vectors\glove.6B.50d.txt"
     temp = get_tmpfile("test_word2vec.txt")
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     _ = g2w(glove_vecs, temp)
     glove = KeyedVectors.load_word2vec_format(temp)
-    '''for i in keywords:
-        print(glove.most_similar(i))'''
 
     TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
                                     "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&items_per_page=100")
     TrumpList.create_corpus()
     new_data = TrumpList.corpus
 
-    bare = Word2Vec(vector_size=50, min_count=1)
+    bare = Word2Vec(vector_size=50, min_count=5)
     bare.build_vocab(new_data)
     bare.build_vocab([list(glove.key_to_index.keys())], update=True)
     total = bare.corpus_count
     bare.train(new_data, total_examples=bare.corpus_count, epochs=bare.epochs)
-
+    vectors = bare.wv
     for i in keywords:
-        print(bare.wv.most_similar(i))
+        print(vectors.most_similar(i))
