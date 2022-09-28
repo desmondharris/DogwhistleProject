@@ -1,2 +1,5 @@
 Pretrained Vectors/*
 LocalTesting.py
+__pycache__/
+.idea/
+.DS_Store
