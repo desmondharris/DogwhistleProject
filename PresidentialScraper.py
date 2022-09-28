@@ -2,8 +2,8 @@ import warnings
 
 import nltk
 import numpy as np
-from gensim.models import KeyedVectors
-from gensim.test.utils import datapath, get_tmpfile
+from gensim.models import KeyedVectors, Word2Vec
+from gensim.test.utils import get_tmpfile
 from gensim.scripts.glove2word2vec import glove2word2vec as g2w
 import urllib.request
 import re
@@ -46,13 +46,18 @@ class PresidentialScraper:
             "@": "",
             "?": "",
             "'": "",
-            '"': ""
+            '"': "",
+            "&": ""
         }
         self.corpus = multiple_replace(replace_dict, self.corpus)
 
         self.corpus = nltk.word_tokenize(self.corpus)
         stop = stopwords.words("english")
         self.corpus = [word for word in self.corpus if word not in stop]
+        temp = []
+        for i in self.corpus:
+            temp.append(list([i]))
+        self.corpus = temp
 
 
 
@@ -76,7 +81,6 @@ def multiple_replace(dict, text):
 
 
 if __name__ == '__main__':
-    '''
     glove_dict = {}
     with open("Pretrained Vectors/glove.6B.50d.txt", 'r', encoding="utf-8") as file:
         for i in file:
@@ -90,11 +94,19 @@ if __name__ == '__main__':
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     _ = g2w(glove_vecs, temp)
     glove = KeyedVectors.load_word2vec_format(temp)
-    for i in keywords:
-        print(glove.most_similar(i))
-    '''
+    '''for i in keywords:
+        print(glove.most_similar(i))'''
+
     TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
                                     "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&items_per_page=100")
     TrumpList.create_corpus()
     new_data = TrumpList.corpus
-    print(new_data)
+
+    bare = Word2Vec(vector_size=50, min_count=1)
+    bare.build_vocab(new_data)
+    bare.build_vocab([list(glove.key_to_index.keys())], update=True)
+    total = bare.corpus_count
+    bare.train(new_data, total_examples=bare.corpus_count, epochs=bare.epochs)
+
+    for i in keywords:
+        print(bare.wv.most_similar(i))
