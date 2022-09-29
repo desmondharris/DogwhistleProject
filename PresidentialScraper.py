@@ -20,13 +20,21 @@ class PresidentialScraper:
 
         page = urllib.request.urlopen(link)
         soup = BeautifulSoup(page, "html.parser")
-        evens = soup.select(".even")
-        odds = soup.select(".odd")
-        for i in odds:
-            evens.append(i)
-        for i in evens:
-            g = "https://www.presidency.ucsb.edu" + i.select('a')[1]['href']
-            self.pages.append(urllib.request.urlopen(g))
+
+        while page is not None:
+            evens = soup.select(".even")
+            odds = soup.select(".odd")
+            for i in odds:
+                evens.append(i)
+            for i in evens:
+                link = "https://www.presidency.ucsb.edu" + i.select('a')[1]['href']
+                self.pages.append(urllib.request.urlopen(link))
+            try:
+                page = urllib.request.urlopen("https://www.presidency.ucsb.edu" +
+                                              soup.find('a', {'title': 'Go to next page'})['href'])
+                soup = BeautifulSoup(page)
+            except TypeError:
+                break
 
     def create_corpus(self):
         for i in self.pages:
@@ -94,7 +102,8 @@ if __name__ == '__main__':
     glove = KeyedVectors.load_word2vec_format(temp)
 
     TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
-                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&items_per_page=100")
+                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B0%5D="
+                                    "54&items_per_page=5")
     TrumpList.create_corpus()
     new_data = TrumpList.corpus
 
