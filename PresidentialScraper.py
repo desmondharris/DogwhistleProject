@@ -1,10 +1,6 @@
-import warnings
-
 import nltk
-import numpy as np
-from gensim.models import KeyedVectors, Word2Vec
-from gensim.test.utils import get_tmpfile
-from gensim.scripts.glove2word2vec import glove2word2vec as g2w
+import gensim.downloader as api
+from gensim.models import Word2Vec
 import urllib.request
 import re
 
@@ -32,7 +28,7 @@ class PresidentialScraper:
             try:
                 page = urllib.request.urlopen("https://www.presidency.ucsb.edu" +
                                               soup.find('a', {'title': 'Go to next page'})['href'])
-                soup = BeautifulSoup(page)
+                soup = BeautifulSoup(page, "html.parser")
             except TypeError:
                 break
 
@@ -86,20 +82,8 @@ def multiple_replace(dict, text):
 
 
 if __name__ == '__main__':
-    glove_dict = {}
-    with open("Pretrained Vectors/glove.6B.50d.txt", 'r', encoding="utf-8") as file:
-        for i in file:
-            line = i.split()
-            key = line[0]
-            vector = np.array(line[1:], "float32")
-            glove_dict[key] = vector
-
-    keywords = ["urban", "thug", "drugs", "terror"]
-    glove_vecs = r"Pretrained Vectors\glove.6B.50d.txt"
-    temp = get_tmpfile("test_word2vec.txt")
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    _ = g2w(glove_vecs, temp)
-    glove = KeyedVectors.load_word2vec_format(temp)
+    glove = api.load('glove-wiki-gigaword-50')
+    old_data = [list(glove.key_to_index.keys())]
 
     TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
                                     "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B0%5D="
@@ -109,9 +93,12 @@ if __name__ == '__main__':
 
     bare = Word2Vec(vector_size=50, min_count=5)
     bare.build_vocab(new_data)
-    bare.build_vocab([list(glove.key_to_index.keys())], update=True)
+    old_data = [list(glove.key_to_index.keys())]
+    bare.build_vocab(old_data, update=True)
     total = bare.corpus_count
     bare.train(new_data, total_examples=bare.corpus_count, epochs=bare.epochs)
     vectors = bare.wv
+
+    keywords = ["urban", "thug", "drugs", "terror"]
     for i in keywords:
         print(vectors.most_similar(i))
