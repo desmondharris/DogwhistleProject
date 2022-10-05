@@ -82,6 +82,7 @@ def multiple_replace(dict, text):
 
 
 if __name__ == '__main__':
+    print('loading glove vecs')
     glove = api.load('glove-wiki-gigaword-50')
     old_data = [list(glove.key_to_index.keys())]
 
