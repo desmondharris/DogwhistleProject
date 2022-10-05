@@ -11,7 +11,8 @@ import re
 from nltk.corpus import stopwords
 
 from bs4 import BeautifulSoup
-
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 class PresidentialScraper:
     def __init__(self, link):
@@ -87,7 +88,7 @@ if __name__ == '__main__':
             glove_dict[key] = vector
 
     keywords = ["urban", "thug", "drugs", "terror"]
-    glove_vecs = r"Pretrained Vectors\glove.6B.50d.txt"
+    glove_vecs = r"Pretrained Vectors/glove.6B.50d.txt"
     temp = get_tmpfile("test_word2vec.txt")
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     _ = g2w(glove_vecs, temp)
@@ -99,8 +100,14 @@ if __name__ == '__main__':
     new_data = TrumpList.corpus
 
     bare = Word2Vec(vector_size=50, min_count=5)
+    print(f"1 bare vocab size: {len(bare.wv.key_to_index.keys())}")
+    print(f"1 'make' is at index {bare.wv.key_to_index.get('make', None)}")
     bare.build_vocab(new_data)
+    print(f"2 bare vocab size: {len(bare.wv.key_to_index.keys())}")
+    print(f"2 'make' is at index {bare.wv.key_to_index.get('make', None)}")
     bare.build_vocab([list(glove.key_to_index.keys())], update=True)
+    print(f"3 bare vocab size: {len(bare.wv.key_to_index.keys())}")
+    print(f"3 'make' is at index {bare.wv.key_to_index.get('make', None)}")
     total = bare.corpus_count
     bare.train(new_data, total_examples=bare.corpus_count, epochs=bare.epochs)
     vectors = bare.wv
