@@ -1,14 +1,13 @@
-import warnings
-
 import nltk
-import numpy as np
-from gensim.models import KeyedVectors, Word2Vec
-from gensim.test.utils import get_tmpfile
-from gensim.scripts.glove2word2vec import glove2word2vec as g2w
+from nltk.corpus import stopwords
+
 import urllib.request
 import re
 
-from nltk.corpus import stopwords
+from gensim.test.utils import datapath
+from gensim.test.utils import get_tmpfile
+from gensim.scripts.glove2word2vec import glove2word2vec as g2w
+from gensim.models import KeyedVectors, Word2Vec
 
 from bs4 import BeautifulSoup
 
@@ -32,7 +31,7 @@ class PresidentialScraper:
             try:
                 page = urllib.request.urlopen("https://www.presidency.ucsb.edu" +
                                               soup.find('a', {'title': 'Go to next page'})['href'])
-                soup = BeautifulSoup(page)
+                soup = BeautifulSoup(page, "html.parser")
             except TypeError:
                 break
 
@@ -83,3 +82,4 @@ def multiple_replace(dict, text):
     regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
     # For each match, look-up corresponding value in dictionary
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
+
