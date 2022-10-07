@@ -1,10 +1,13 @@
 import nltk
-import gensim.downloader as api
-from gensim.models import Word2Vec
+from nltk.corpus import stopwords
+
 import urllib.request
 import re
 
-from nltk.corpus import stopwords
+from gensim.test.utils import datapath
+from gensim.test.utils import get_tmpfile
+from gensim.scripts.glove2word2vec import glove2word2vec as g2w
+from gensim.models import KeyedVectors, Word2Vec
 
 from bs4 import BeautifulSoup
 
@@ -83,23 +86,28 @@ def multiple_replace(dict, text):
 
 if __name__ == '__main__':
     print('loading glove vecs')
-    glove = api.load('glove-wiki-gigaword-50')
-    old_data = [list(glove.key_to_index.keys())]
+    glove_file = datapath(r"C:\Users\dsm84762\PycharmProjects\DogwhistleProject\Pretrained Vectors\glove.6B.50d.txt")
+    tmp_file = get_tmpfile("test_word2vec.txt")
+
+    _ = g2w(glove_file, tmp_file)
+
+    glove_vectors = KeyedVectors.load_word2vec_format(tmp_file)
+
 
     TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
                                     "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B0%5D="
                                     "54&items_per_page=5")
     TrumpList.create_corpus()
-    new_data = TrumpList.corpus
+    cleaned_sentences = TrumpList.corpus
 
-    bare = Word2Vec(vector_size=50, min_count=5)
-    bare.build_vocab(new_data)
-    old_data = [list(glove.key_to_index.keys())]
-    bare.build_vocab(old_data, update=True)
-    total = bare.corpus_count
-    bare.train(new_data, total_examples=bare.corpus_count, epochs=bare.epochs)
-    vectors = bare.wv
+    base_model = Word2Vec(vector_size=300, min_count=5)
+    base_model.build_vocab(cleaned_sentences)
+    total_examples = base_model.corpus_count
 
-    keywords = ["urban", "thug", "drugs", "terror"]
-    for i in keywords:
-        print(vectors.most_similar(i))
+    base_model.build_vocab([list(glove_vectors.index_to_key)], update=True)
+
+    base_model.train(cleaned_sentences, total_examples=total_examples, epochs=base_model.epochs)
+    base_model_wv = base_model.wv
+
+    print(base_model_wv.most_similar("criminal"))
+    print(base_model_wv.most_similar("urban"))
