@@ -83,35 +83,3 @@ def multiple_replace(dict, text):
     regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
     # For each match, look-up corresponding value in dictionary
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
-
-
-if __name__ == '__main__':
-    glove_dict = {}
-    with open("Pretrained Vectors/glove.6B.50d.txt", 'r', encoding="utf-8") as file:
-        for i in file:
-            line = i.split()
-            key = line[0]
-            vector = np.array(line[1:], "float32")
-            glove_dict[key] = vector
-
-    keywords = ["urban", "thug", "drugs", "terror"]
-    glove_vecs = r"Pretrained Vectors\glove.6B.50d.txt"
-    temp = get_tmpfile("test_word2vec.txt")
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    _ = g2w(glove_vecs, temp)
-    glove = KeyedVectors.load_word2vec_format(temp)
-
-    TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
-                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B0%5D="
-                                    "54&items_per_page=5")
-    TrumpList.create_corpus()
-    new_data = TrumpList.corpus
-
-    bare = Word2Vec(vector_size=50, min_count=5)
-    bare.build_vocab(new_data)
-    bare.build_vocab([list(glove.key_to_index.keys())], update=True)
-    total = bare.corpus_count
-    bare.train(new_data, total_examples=bare.corpus_count, epochs=bare.epochs)
-    vectors = bare.wv
-    for i in keywords:
-        print(vectors.most_similar(i))
