@@ -83,3 +83,30 @@ def multiple_replace(dict, text):
     # For each match, look-up corresponding value in dictionary
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
 
+
+if __name__ == '__main__':
+    print('loading glove vecs')
+    glove_file = datapath(r"C:\Users\dsm84762\PycharmProjects\DogwhistleProject\Pretrained Vectors\glove.6B.50d.txt")
+    tmp_file = get_tmpfile("test_word2vec.txt")
+
+    _ = g2w(glove_file, tmp_file)
+
+    glove_vectors = KeyedVectors.load_word2vec_format(tmp_file)
+
+    TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
+                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B0%5D="
+                                    "54&items_per_page=5")
+    TrumpList.create_corpus()
+    cleaned_sentences = TrumpList.corpus
+
+    base_model = Word2Vec(vector_size=300, min_count=5)
+    base_model.build_vocab(cleaned_sentences)
+    total_examples = base_model.corpus_count
+
+    base_model.build_vocab([list(glove_vectors.index_to_key)], update=True)
+
+    base_model.train(cleaned_sentences, total_examples=total_examples, epochs=base_model.epochs)
+    base_model_wv = base_model.wv
+
+    print(base_model_wv.most_similar("criminal"))
+    print(base_model_wv.most_similar("urban"))
