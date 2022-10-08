@@ -1,4 +1,3 @@
-
 import platform
 
 import urllib.request
@@ -14,6 +13,7 @@ import urllib.request
 import re
 
 
+
 from bs4 import BeautifulSoup
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -26,6 +26,7 @@ class PresidentialScraper:
 
         page = urllib.request.urlopen(link)
         soup = BeautifulSoup(page, "html.parser")
+
 
         pageCount = 0
         while page is not None:
@@ -45,9 +46,10 @@ class PresidentialScraper:
             except TypeError:
                 break
 
-    def create_corpus(self, removeStops=True):
 
+    def create_corpus(self):
         print(f"create corpus from {len(self.pages)} pages")
+
         for i in self.pages:
             self.corpus += extract_speech(i)
         self.corpus = self.corpus.lower()
@@ -128,6 +130,7 @@ def multiple_replace(dict, text):
     # For each match, look-up corresponding value in dictionary
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
 
+
 def showSample(vectors, target, count=2, modelLabel=""):
 
     if target in vectors.key_to_index.keys():
@@ -184,3 +187,4 @@ if __name__ == '__main__':
 
 
     showSample(base_model.wv, 'urban', count=5, modelLabel="base_model retrained with Glove")
+
