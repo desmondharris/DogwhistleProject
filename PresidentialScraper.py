@@ -10,6 +10,7 @@ from gensim.test.utils import get_tmpfile
 from gensim.scripts.glove2word2vec import glove2word2vec as g2w
 from gensim.test.utils import datapath
 import urllib.request
+import warnings
 import re
 
 
@@ -153,6 +154,7 @@ if __name__ == '__main__':
         fName = f"C:\\Users\\dsm84762\\PycharmProjects\\DogwhistleProject\\Pretrained Vectors\\glove.6B.{dims}d.txt"
     glove_file = datapath(fName)
     tmp_file = get_tmpfile("test_word2vec.txt")
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
     _ = g2w(glove_file, tmp_file)
 
     glove_vectors = KeyedVectors.load_word2vec_format(tmp_file)
@@ -161,8 +163,8 @@ if __name__ == '__main__':
     showSample(glove_vectors, 'president', count=5, modelLabel="glove_vectors")
 
     TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
-                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B0%5D="
-                                    "54&items_per_page=5")
+                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B%5D="
+                                    "&items_per_page=100")
     TrumpList.create_corpus()
     cleaned_sentences = TrumpList.corpusSentenceTokens # corpus
 
@@ -171,20 +173,21 @@ if __name__ == '__main__':
           f"in {len(cleaned_sentences)} sentences.")
     base_model.build_vocab(cleaned_sentences)
 
-    showSample(base_model.wv, 'president', count=5, modelLabel="base_model")
     total_examples = base_model.corpus_count
 
     base_model.build_vocab([list(glove_vectors.index_to_key)], update=True)
 
     base_model.train(cleaned_sentences, total_examples=total_examples, epochs=base_model.epochs)
-
-    showSample(base_model.wv, 'president', count=5, modelLabel="base_model retrained with Glove")
-    sims = base_model.wv.most_similar('president')[:2]
     base_model_wv = base_model.wv
-    print(f"Two similar words for 'president' using the initial base_model retrained: {sims}")
-    print(f"Vectors in base_model have {base_model_wv.vector_size} element vectors for "
-          f"{len(base_model_wv.key_to_index)} words.")
 
+    showSample(glove_vectors, 'president', "base glove vectors")
+    showSample(base_model_wv, 'president', "retrained model")
 
-    showSample(base_model.wv, 'urban', count=5, modelLabel="base_model retrained with Glove")
+    showSample(glove_vectors, 'crime', "base glove vectors")
+    showSample(base_model_wv, 'crime', "retrained model")
 
+    showSample(glove_vectors, 'terrorism', "base glove vectors")
+    showSample(base_model_wv, 'terrorism', "retrained model")
+
+    showSample(glove_vectors, 'drugs', "base glove vectors")
+    showSample(base_model_wv, 'drugs', "retrained model")
