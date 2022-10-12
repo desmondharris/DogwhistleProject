@@ -2,7 +2,6 @@ import platform
 
 import urllib.request
 
-
 import nltk
 from nltk.corpus import stopwords
 from gensim.models import KeyedVectors, Word2Vec
@@ -12,11 +11,11 @@ from gensim.test.utils import datapath
 import urllib.request
 import warnings
 import re
-
-
+import pandas as pd
 
 from bs4 import BeautifulSoup
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
@@ -28,10 +27,9 @@ class PresidentialScraper:
         page = urllib.request.urlopen(link)
         soup = BeautifulSoup(page, "html.parser")
 
-
         pageCount = 0
         while page is not None:
-            print(f"Processing link #{pageCount}: {link}")
+            print(f"Processing query page {pageCount}")
             pageCount += 1
             evens = soup.select(".even")
             odds = soup.select(".odd")
@@ -47,7 +45,6 @@ class PresidentialScraper:
             except TypeError:
                 break
 
-
     def create_corpus(self):
         print(f"create corpus from {len(self.pages)} pages")
 
@@ -60,7 +57,7 @@ class PresidentialScraper:
             ']': "",
             "(": "",
             ")": "",
-            #".": "",
+            # ".": "",
             "mr.": "mr",
             "mrs.": "mrs",
             "ms.": "ms",
@@ -105,7 +102,7 @@ class PresidentialScraper:
         originalLength = len(self.corpus)
         self.corpus = [word for word in self.corpus if word not in stop]
         print(f"Removing stop words reduced the {originalLength}-word "
-              f"corpus by {originalLength-len(self.corpus)} to {len(self.corpus)} words.")
+              f"corpus by {originalLength - len(self.corpus)} to {len(self.corpus)} words.")
         temp = [self.corpus]
         self.corpus = temp
         print(f"corpus of {len(self.corpus[0])} tokenized words.")
@@ -113,13 +110,26 @@ class PresidentialScraper:
               f"containing {sum(len(sent) for sent in self.corpusSentenceTokens)} words.")
         return
 
+
 def extract_speech(page):
     full_text = ""
     soup = BeautifulSoup(page, "html.parser")
-    article = soup.select(".field-docs-content")
-    for i in article:
-        temp = i.getText()
-        full_text += temp
+    if "Tweets" in soup.select_one("title").getText():
+        tweets = soup.select("td")
+        for num, tweet in enumerate(tweets):
+            # go through td elements and add only odd ones due to indexing
+            if num % 2 != 0:
+                temp = tweet.getText()
+                temp = temp.split("Retweets", 1)
+                full_text += temp[0] + " "
+
+        full_text = multiple_replace({"RT": "", "@": ""}, full_text)
+    else:
+        article = soup.select(".field-docs-content")
+        for i in article:
+            temp = i.getText()
+            full_text += temp
+
     return full_text
 
 
@@ -133,7 +143,6 @@ def multiple_replace(dict, text):
 
 
 def showSample(vectors, target, count=2, modelLabel=""):
-
     if target in vectors.key_to_index.keys():
         sims = vectors.most_similar(target)[:2]
         if len(sims) >= count:
@@ -145,7 +154,14 @@ def showSample(vectors, target, count=2, modelLabel=""):
         print(f"{target} is not available in the vocabulary.")
     return
 
+
 if __name__ == '__main__':
+    TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
+                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B%5D="
+                                    "83&items_per_page=100")
+    TrumpList.create_corpus()
+    cleaned_sentences = TrumpList.corpusSentenceTokens # corpus
+
     dims = 50 # 300
     print(f"loading {dims}-dimensional glove vecs")
     if platform.system() == 'Darwin':
@@ -160,34 +176,33 @@ if __name__ == '__main__':
     glove_vectors = KeyedVectors.load_word2vec_format(tmp_file)
     print(f"Vectors loaded from {glove_file} have {glove_vectors.vector_size} element vectors for "
           f"{len(glove_vectors.key_to_index)} words.")
-    showSample(glove_vectors, 'president', count=5, modelLabel="glove_vectors")
 
-    TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
-                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B%5D="
-                                    "&items_per_page=100")
-    TrumpList.create_corpus()
-    cleaned_sentences = TrumpList.corpusSentenceTokens # corpus
 
     base_model = Word2Vec(vector_size=dims, min_count=5)
     print(f"Build vocabulary for base_model using {sum(len(sent) for sent in cleaned_sentences)} words "
           f"in {len(cleaned_sentences)} sentences.")
     base_model.build_vocab(cleaned_sentences)
-
+    print(f"base_model vocabulary is now {len(base_model.wv.vectors)}")
     total_examples = base_model.corpus_count
 
+    print("Build vocabulary for base_model with glove vocabulary")
     base_model.build_vocab([list(glove_vectors.index_to_key)], update=True)
+    print(f"base_model vocabulary is now {len(base_model.wv.vectors)}")
 
     base_model.train(cleaned_sentences, total_examples=total_examples, epochs=base_model.epochs)
     base_model_wv = base_model.wv
 
-    showSample(glove_vectors, 'president', "base glove vectors")
-    showSample(base_model_wv, 'president', "retrained model")
+    showSample(glove_vectors, 'president',  modelLabel="base glove vectors")
+    showSample(base_model_wv, 'president', modelLabel="retrained model")
 
-    showSample(glove_vectors, 'crime', "base glove vectors")
-    showSample(base_model_wv, 'crime', "retrained model")
+    showSample(glove_vectors, 'crime', modelLabel="base glove vectors")
+    showSample(base_model_wv, 'crime', modelLabel="retrained model")
 
-    showSample(glove_vectors, 'terrorism', "base glove vectors")
-    showSample(base_model_wv, 'terrorism', "retrained model")
+    showSample(glove_vectors, 'terrorism', modelLabel="base glove vectors")
+    showSample(base_model_wv, 'terrorism', modelLabel="retrained model")
 
-    showSample(glove_vectors, 'drugs', "base glove vectors")
-    showSample(base_model_wv, 'drugs', "retrained model")
+    showSample(glove_vectors, 'drugs', modelLabel="base glove vectors")
+    showSample(base_model_wv, 'drugs', modelLabel="retrained model")
+
+
+
