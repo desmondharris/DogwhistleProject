@@ -149,9 +149,9 @@ def showSample(vectors, target, count=2, modelLabel=""):
             print(f"{count} similar words for '{target}' using the {modelLabel}: {sims}")
             print(f"with {modelLabel} vocab size {len(vectors.key_to_index)}")
         else:
-            print(f"{target} did not produce {count} similar words.")
+            print(f"{target} did not produce {count} similar words using {modelLabel}.")
     else:
-        print(f"{target} is not available in the vocabulary.")
+        print(f"{target} is not available in the vocabulary of {modelLabel}.")
     return
 
 
