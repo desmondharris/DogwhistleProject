@@ -49,7 +49,21 @@ class PresidentialScraper:
         print(f"create corpus from {len(self.pages)} pages")
 
         for i in self.pages:
-            self.corpus += extract_speech(i)
+            soup = BeautifulSoup(i, "html.parser")
+            title = soup.select_one(".diet-title").getText()
+            title += soup.select_one(".field-ds-doc-title h1").getText()
+            title += soup.select_one(".date-display-single").getText()
+            replace_dict = {" ": ""}
+            title = multiple_replace(replace_dict, title)
+            title = title.lower()
+
+            # Need to eventually check to see if file exists first
+            temp = open(f"C:\\Users\\dsm84762\\PycharmProjects\\DogwhistleProject\\Presidential Corpus\\"
+                        f"Raw Files\\{title}.txt", "w")
+            speech = extract_speech(urllib.request.urlopen(i.url))
+            temp.write(speech)
+
+            self.corpus += speech
         self.corpus = self.corpus.lower()
 
         replace_dict = {
@@ -90,7 +104,8 @@ class PresidentialScraper:
             "we've": "we have",
             '-': " ",
             '"': "",
-            "&": ""
+            "&": "",
+            "*": ""
         }
         # need to remove periods that are not ending a sentence like "Mr. Trump"
         stop = stopwords.words("english")
@@ -156,10 +171,10 @@ def showSample(vectors, target, count=2, modelLabel=""):
 
 
 if __name__ == '__main__':
-    TrumpList = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
-                                    "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B%5D="
-                                    "83&items_per_page=100")
-    TrumpList.create_corpus()
+    scraper = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
+                                  "&field-keywords3=&from%5Bdate%5D=04-01-1840&to%5Bdate%5D=04-10-1840&person2="
+                                  "&items_per_page=100")
+    scraper.create_corpus()
 
 
 
