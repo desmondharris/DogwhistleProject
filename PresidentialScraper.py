@@ -144,7 +144,7 @@ def multiple_replace(dict, text):
 
 def showSample(vectors, target, count=2, modelLabel=""):
     if target in vectors.key_to_index.keys():
-        sims = vectors.most_similar(target)[:2]
+        sims = vectors.most_similar(target)[:count]
         if len(sims) >= count:
             print(f"{count} similar words for '{target}' using the {modelLabel}: {sims}")
             print(f"with {modelLabel} vocab size {len(vectors.key_to_index)}")
@@ -160,49 +160,6 @@ if __name__ == '__main__':
                                     "&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200301&category2%5B%5D="
                                     "83&items_per_page=100")
     TrumpList.create_corpus()
-    cleaned_sentences = TrumpList.corpusSentenceTokens # corpus
-
-    dims = 50 # 300
-    print(f"loading {dims}-dimensional glove vecs")
-    if platform.system() == 'Darwin':
-        fName = f"/Users/lance/Documents/GitHub/DogwhistleProject/Pretrained Vectors/glove.6B.{dims}d.txt"
-    else:
-        fName = f"C:\\Users\\dsm84762\\PycharmProjects\\DogwhistleProject\\Pretrained Vectors\\glove.6B.{dims}d.txt"
-    glove_file = datapath(fName)
-    tmp_file = get_tmpfile("test_word2vec.txt")
-    warnings.filterwarnings('ignore', category=DeprecationWarning)
-    _ = g2w(glove_file, tmp_file)
-
-    glove_vectors = KeyedVectors.load_word2vec_format(tmp_file)
-    print(f"Vectors loaded from {glove_file} have {glove_vectors.vector_size} element vectors for "
-          f"{len(glove_vectors.key_to_index)} words.")
-
-
-    base_model = Word2Vec(vector_size=dims, min_count=5)
-    print(f"Build vocabulary for base_model using {sum(len(sent) for sent in cleaned_sentences)} words "
-          f"in {len(cleaned_sentences)} sentences.")
-    base_model.build_vocab(cleaned_sentences)
-    print(f"base_model vocabulary is now {len(base_model.wv.vectors)}")
-    total_examples = base_model.corpus_count
-
-    print("Build vocabulary for base_model with glove vocabulary")
-    base_model.build_vocab([list(glove_vectors.index_to_key)], update=True)
-    print(f"base_model vocabulary is now {len(base_model.wv.vectors)}")
-
-    base_model.train(cleaned_sentences, total_examples=total_examples, epochs=base_model.epochs)
-    base_model_wv = base_model.wv
-
-    showSample(glove_vectors, 'president',  modelLabel="base glove vectors")
-    showSample(base_model_wv, 'president', modelLabel="retrained model")
-
-    showSample(glove_vectors, 'crime', modelLabel="base glove vectors")
-    showSample(base_model_wv, 'crime', modelLabel="retrained model")
-
-    showSample(glove_vectors, 'terrorism', modelLabel="base glove vectors")
-    showSample(base_model_wv, 'terrorism', modelLabel="retrained model")
-
-    showSample(glove_vectors, 'drugs', modelLabel="base glove vectors")
-    showSample(base_model_wv, 'drugs', modelLabel="retrained model")
 
 
 
