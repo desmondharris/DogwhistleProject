@@ -53,13 +53,19 @@ class PresidentialScraper:
             title = soup.select_one(".diet-title").getText()
             title += soup.select_one(".field-ds-doc-title h1").getText()
             title += soup.select_one(".date-display-single").getText()
-            replace_dict = {" ": ""}
+            replace_dict = {" ": "", '"': ""}
             title = multiple_replace(replace_dict, title)
             title = title.lower()
 
             # Need to eventually check to see if file exists first
-            temp = open(f"C:\\Users\\dsm84762\\PycharmProjects\\DogwhistleProject\\Presidential Corpus\\"
-                        f"Raw Files\\{title}.txt", "w")
+
+            # fileName should be the absolute path to the github repository
+            if platform.system() == 'Windows':
+                fileName = f"C:\\Users\\dsm84762\\PycharmProjects\\DogwhistleProject\\"
+            if platform.system() == 'Darwin':
+                fileName = ""
+
+            temp = open(fileName + f"Presidential Corpus\\Raw Files\\{title}.txt", "w")
             speech = extract_speech(urllib.request.urlopen(i.url))
             temp.write(speech)
 
@@ -120,6 +126,8 @@ class PresidentialScraper:
               f"corpus by {originalLength - len(self.corpus)} to {len(self.corpus)} words.")
         temp = [self.corpus]
         self.corpus = temp
+        main = open(fileName + "Presidential Corpus\\fullText.txt", 'w')
+        main.write(' '.join(self.corpus[0]))
         print(f"corpus of {len(self.corpus[0])} tokenized words.")
         print(f"corpus of {len(self.corpusSentenceTokens)} tokenized sentences "
               f"containing {sum(len(sent) for sent in self.corpusSentenceTokens)} words.")
@@ -171,9 +179,9 @@ def showSample(vectors, target, count=2, modelLabel=""):
 
 
 if __name__ == '__main__':
-    scraper = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2="
-                                  "&field-keywords3=&from%5Bdate%5D=04-01-1840&to%5Bdate%5D=04-10-1840&person2="
-                                  "&items_per_page=100")
+    scraper = PresidentialScraper("https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2"
+                                  "=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=200274&category2%5B%5D="
+                                  "19&category2%5B%5D=74&category2%5B%5D=46&category2%5B%5D=59&items_per_page=10")
     scraper.create_corpus()
 
 
