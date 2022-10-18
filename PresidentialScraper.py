@@ -61,11 +61,11 @@ class PresidentialScraper:
 
             # fileName should be the absolute path to the github repository
             if platform.system() == 'Windows':
-                fileName = f"C:\\Users\\dsm84762\\PycharmProjects\\DogwhistleProject\\"
+                fileName = f"C:\\Users\\dsm84762\\PycharmProjects\\DogwhistleProject\\Presidential Corpus\\Raw Files\\"
             if platform.system() == 'Darwin':
                 fileName = ""
 
-            temp = open(fileName + f"Presidential Corpus\\Raw Files\\{title}.txt", "w")
+            temp = open(fileName + f"{title}.txt", "w")
             speech = extract_speech(urllib.request.urlopen(i.url))
             temp.write(speech)
 
@@ -126,7 +126,8 @@ class PresidentialScraper:
               f"corpus by {originalLength - len(self.corpus)} to {len(self.corpus)} words.")
         temp = [self.corpus]
         self.corpus = temp
-        main = open(fileName + "Presidential Corpus\\fullText.txt", 'w')
+
+        main = open(fileName + "fullText.txt", 'w')
         main.write(' '.join(self.corpus[0]))
         print(f"corpus of {len(self.corpus[0])} tokenized words.")
         print(f"corpus of {len(self.corpusSentenceTokens)} tokenized sentences "
